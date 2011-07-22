@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    use Test::More tests => 8;
+    use Test::More tests => 9;
     use_ok 'Util::YKO::GetTag';
 }
 
@@ -41,3 +41,8 @@ $html = "foo<div> <p class='bar_class'> <span>bar </p> baz</div>";
 $tag = get_tag $html, 'p', class => 'bar_class';
 
 is $tag, "<p class='bar_class'> <span>bar </p>";
+
+$html = "foo<div> <p class='bar_class' /> bar </p> baz</div>";
+$tag = get_tag $html, 'p', class => 'bar_class';
+
+is $tag, "<p class='bar_class' />", "self-closing tag";
