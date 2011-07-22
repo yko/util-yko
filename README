@@ -1,0 +1,22 @@
+util-yko version 0.01
+
+Some stuff I need sometimes.
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    cpanm https://github.com/yko/util-yko/tarball/master
+
+
+DEPENDENCIES
+
+None.
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2011, Yaroslav Korshak
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
