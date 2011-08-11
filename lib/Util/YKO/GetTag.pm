@@ -4,7 +4,7 @@ use warnings;
 use strict;
 require Carp;
 
-our $VERSION = 0.01;
+our $VERSION = 0.0101;
 
 sub get_tag(\$$;%) {
     my ($html, $tag, %opts) = @_;
@@ -18,7 +18,13 @@ sub get_tag(\$$;%) {
     }
 
     if ($key) {
-        $startregexp .= "[^>]+\Q${key}\E=([\"'])\Q$opts{$key}\E\\1";
+        $startregexp .= "[^>]+\Q${key}\E=([\"'])";
+        if (UNIVERSAL::isa($opts{$key}, 'Regexp')) {
+            $startregexp .= $opts{$key};
+        } else {
+            $startregexp .= quotemeta $opts{$key};
+        }
+        $startregexp .= "\\1";
         delete $opts{$key};
     }
     $startregexp .= '.*?(/?)>';
