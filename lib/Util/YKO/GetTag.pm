@@ -18,7 +18,7 @@ sub get_tag(\$$;%) {
     }
 
     if ($key) {
-        $startregexp .= "[^>]+\Q${key}\E=([\"'])";
+        $startregexp .= "\\s+[^>]*?\Q${key}\E=([\"'])";
         if (UNIVERSAL::isa($opts{$key}, 'Regexp')) {
             $startregexp .= $opts{$key};
         } else {
