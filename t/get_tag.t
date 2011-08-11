@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    use Test::More tests => 10;
+    use Test::More tests => 11;
     use_ok 'Util::YKO::GetTag';
 }
 
@@ -53,6 +53,7 @@ $tag = get_tag $html, 'div', class => 'bar_class';
 
 is $tag, "<div class='bar_class'/>", "self-closing tag with tag";
 
-$tag = get_tag $html, 'div', class => qr/bar\w+/;
+pos($html) = 0; # Reset \G position
+$tag = get_tag $html, 'div', class => qr/bar_\w+/;
 
 is $tag, "<div class='bar_class'/>", "match parameter value via regexp";
