@@ -59,10 +59,21 @@ sub get_tag(\$$;%) {
     undef;
 }
 
+sub get_tag_inner(\$$;%) {
+    my @result = &get_tag;
+    return unless $result[0];
+
+    $result[0] =~ s#^<\Q$_[1]\E(?:\s+[^>]*?)?>##s;
+    $result[0] =~ s#</\Q$_[1]\E\s*>##s;
+
+    return wantarray ? @result : $result[0];
+}
+
 sub import {
     my $caller = caller;
     no strict 'refs';
     *{"${caller}::get_tag"} = \&get_tag;
+    *{"${caller}::get_tag_inner"} = \&get_tag_inner;
 }
 
 1;
@@ -101,7 +112,22 @@ L<Util::YKO::GetTag> exports following functions:
 
 In scalar context returns tag content.
 
-In list context returns tag content, start pos and end pos in original html
+In list context returns tag content,
+start pos and end pos in original html string
+
+As options accepts list of tag attributes
+
+=head2 get_tag_inner
+
+    my $tag = get_tag_inner $html, $tag, %options;
+    my $tag = get_tag_inner $html, $tag, id => 'foo', class => 'bar';
+
+    my ($tag, $start, $end) = get_tag_inner $html, $tag, %options;
+
+In scalar context returns tag inner content.
+
+In list context returns tag inner content,
+start pos and end pos in original html string
 
 As options accepts list of tag attributes
 
