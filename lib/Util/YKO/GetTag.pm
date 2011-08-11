@@ -10,8 +10,12 @@ sub get_tag(\$$;%) {
     my ($html, $tag, %opts) = @_;
     my $startregexp = "<\Q$tag\E";
 
-    my $key = 'id' if exists $opts{id};
-    $key ||= (keys %opts)[0] if %opts;
+    my $key;
+    if (exists $opts{id}) {
+        $key = 'id';
+    } elsif (%opts) {
+        $key = (keys %opts)[0];
+    }
 
     if ($key) {
         $startregexp .= "[^>]+\Q${key}\E=([\"'])\Q$opts{$key}\E\\1";
@@ -39,7 +43,7 @@ sub get_tag(\$$;%) {
         my $text = substr($$html, $startpos, $endpos - $startpos);
         foreach my $o (keys %opts) {
             if ($text !~ /<$tag[^>]+\Q$o\E=(["'])\Q$opts{$o}\E\1/) {
-                pos($$html) = $startpos + 1;
+                pos($$html) = $startpos;
                 redo OPTS;
             }
         }
