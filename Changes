@@ -1,5 +1,8 @@
 Revision history for util-yko
 
+0.02   Wed Aug 17 15:41:55 2011
+       Add module starter plugin for configurable ignores
+
 0.0101 Thu Aug 11 12:34:48 2011
        Allow regexps in attribute values
        New feature: get_tag_inner for inner content of the tag

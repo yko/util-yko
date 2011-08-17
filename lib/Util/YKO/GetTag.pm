@@ -4,7 +4,7 @@ use warnings;
 use strict;
 require Carp;
 
-our $VERSION = 0.0101;
+our $VERSION = 0.02;
 
 sub get_tag(\$$;%) {
     my ($html, $tag, %opts) = @_;
