@@ -23,7 +23,7 @@ sub _self {
     UNIVERSAL::isa($_[0], __PACKAGE__) ? $_[0] : __PACKAGE__->new($_[0]);
 }
 
-sub get_tag(\$$;%) {
+sub get(\$$;%) {
     my ($tag, %opts) = @_[1..$#_];
     my $self = &_self;
 
@@ -81,8 +81,8 @@ sub child {
     ref($_[0])->new( substr ${$_[0]}, $_[1], $_[2] );
 }
 
-sub get_tag_inner(\$$;%) {
-    my @result = &get_tag;
+sub inner(\$$;%) {
+    my @result = &get;
     return unless $result[0];
 
     $result[0] =~ s#^<\Q$_[1]\E(?:\s+[^>]*?)?>##s;
@@ -94,8 +94,8 @@ sub get_tag_inner(\$$;%) {
 sub import {
     my $caller = caller;
     no strict 'refs';
-    *{"${caller}::get_tag"} = \&get_tag;
-    *{"${caller}::get_tag_inner"} = \&get_tag_inner;
+    *{"${caller}::get_tag"} = \&get;
+    *{"${caller}::get_tag_inner"} = \&inner;
 }
 
 sub reset {
