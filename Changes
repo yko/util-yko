@@ -1,5 +1,8 @@
 Revision history for util-yko
 
+0.03   Thu Aug 25 17:22:34 2011
+       GetTag supports OO
+
 0.02   Wed Aug 17 15:41:55 2011
        Add module starter plugin for configurable ignores
 

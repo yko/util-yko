@@ -138,7 +138,7 @@ L<Util::YKO::GetTag> exports following functions:
 
     my ($tag, $start, $end) = get_tag $html, $tag, %options;
 
-In scalar context returns tag content.
+In scalar context returns tag content wrapped in Util::YKO::GetTag object.
 
 In list context returns tag content,
 start pos and end pos in original html string
@@ -152,12 +152,32 @@ As options accepts list of tag attributes
 
     my ($tag, $start, $end) = get_tag_inner $html, $tag, %options;
 
-In scalar context returns tag inner content.
+In scalar context returns tag content wrapped in Util::YKO::GetTag object.
 
 In list context returns tag inner content,
 start pos and end pos in original html string
 
 As options accepts list of tag attributes
+
+=head1 METHODS
+
+L<Util::YKO::GetTag> objects have following methods:
+
+=head2 get
+
+See get_tag function
+
+    my $child = $tag->get($tag, %options);
+
+=head2 inner
+
+See get_tag_inner function
+
+    my $child = $tag->inner($tag, %options);
+
+=head2 reset
+
+Search from beginning. The same as pos($string) = 0
 
 =head1 LICENCE AND COPYRIGHT
 
