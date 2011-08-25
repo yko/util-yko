@@ -7,6 +7,7 @@ license  'perl';
 
 build_requires 'Test::More';
 requires 'Carp';
+requires 'Scalar::Util';
 
 auto_install;
 
