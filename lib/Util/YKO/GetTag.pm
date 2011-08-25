@@ -3,13 +3,31 @@ package Util::YKO::GetTag;
 use warnings;
 use strict;
 require Carp;
+use overload '""' => sub { ${$_[0]} }, fallback => 1;
+use Scalar::Util 'readonly';
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
+
+sub new {
+    my $class = ref $_[0] ? ref $_[0] : $_[0];
+
+    if (readonly $_[1]) {
+        my $value = $_[1];
+        return bless \$value, $class;
+    }
+
+    bless ref $_[1] ? $_[1] : \$_[1], $class;
+}
+
+sub _self {
+    UNIVERSAL::isa($_[0], __PACKAGE__) ? $_[0] : __PACKAGE__->new($_[0]);
+}
 
 sub get_tag(\$$;%) {
-    my ($html, $tag, %opts) = @_;
-    my $startregexp = "<\Q$tag\E";
+    my ($tag, %opts) = @_[1..$#_];
+    my $self = &_self;
 
+    my $startregexp = "<\Q$tag\E";
     my $key;
     if (exists $opts{id}) {
         $key = 'id';
@@ -29,34 +47,38 @@ sub get_tag(\$$;%) {
     }
     $startregexp .= '.*?(/?)>';
 
-  OPTS: while ($$html =~ /$startregexp/gsc) {
+  OPTS: while ($$self =~ /$startregexp/gsc) {
 
         my $startpos = $-[0];
         my $endpos   = $+[0];
 
         # Empty tag like <div />
         if ($2) {
-            my $text = substr($$html, $startpos, $endpos - $startpos);
-            return wantarray ? ($text, $startpos, $endpos) : $text;
+            my $child = $self->child($startpos, $endpos - $startpos);
+            return wantarray ? ($child, $startpos, $endpos) : $child;
         }
 
         my $level = 1;
-        while ($level && ($$html =~ m#<(/?)\Q$tag\E.*?>#gsc)) {
+        while ($level && ($$self =~ m#<(/?)\Q$tag\E.*?>#gsc)) {
             $endpos = $+[0];
             $1 ? $level-- : $level++;
         }
 
-        my $text = substr($$html, $startpos, $endpos - $startpos);
+        my $child = $self->child($startpos, $endpos - $startpos);
         foreach my $o (keys %opts) {
-            if ($text !~ /<$tag[^>]+\Q$o\E=(["'])\Q$opts{$o}\E\1/) {
-                pos($$html) = $startpos;
+            if ($$child !~ /<$tag[^>]+\Q$o\E=(["'])\Q$opts{$o}\E\1/) {
+                pos($$child) = $startpos;
                 redo OPTS;
             }
         }
 
-        return wantarray ? ($text, $startpos, $endpos) : $text;
+        return wantarray ? ($child, $startpos, $endpos) : $child;
     }
     undef;
+}
+
+sub child {
+    ref($_[0])->new( substr ${$_[0]}, $_[1], $_[2] );
 }
 
 sub get_tag_inner(\$$;%) {
@@ -74,6 +96,12 @@ sub import {
     no strict 'refs';
     *{"${caller}::get_tag"} = \&get_tag;
     *{"${caller}::get_tag_inner"} = \&get_tag_inner;
+}
+
+sub reset {
+    my $self = &_self;
+    pos($$self) = 0;
+    $self;
 }
 
 1;
