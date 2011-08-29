@@ -45,15 +45,16 @@ sub get(\$$;%) {
         $startregexp .= "\\1";
         delete $opts{$key};
     }
-    $startregexp .= '.*?(/?)>';
+    $startregexp .= '(?:\s+.*?|\s*?)(/?)>';
 
   OPTS: while ($$self =~ /$startregexp/gsc) {
 
         my $startpos = $-[0];
         my $endpos   = $+[0];
+        my $selfclose = $key ? \$2 : \$1;
 
         # Empty tag like <div />
-        if ($2) {
+        if ($$selfclose) {
             my $child = $self->child($startpos, $endpos - $startpos);
             return wantarray ? ($child, $startpos, $endpos) : $child;
         }
