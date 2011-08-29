@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    use Test::More tests => 11;
+    use Test::More tests => 12;
     use_ok 'Util::YKO::GetTag';
 }
 
@@ -57,3 +57,7 @@ pos($html) = 0; # Reset \G position
 $tag = get_tag $html, 'div', class => qr/bar_\w+/;
 
 is $tag, "<div class='bar_class'/>", "match parameter value via regexp";
+
+$html = "<divfake> foo <div class='bar_class'/> baz </divfake>";
+$tag = get_tag $html, 'div';
+is $tag, "<div class='bar_class'/>", 'choose right tag';
