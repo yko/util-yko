@@ -61,3 +61,9 @@ is $tag, "<div class='bar_class'/>", "match parameter value via regexp";
 $html = "<divfake> foo <div class='bar_class'/> baz </divfake>";
 $tag = get_tag $html, 'div';
 is $tag, "<div class='bar_class'/>", 'choose right tag';
+
+pos($html) = 0; # Reset \G position
+$tag = get_tag $html, class => 'bar_class';
+
+is $tag, "<div class='bar_class'/>",
+  "match tag by only attributes (no name provided)";

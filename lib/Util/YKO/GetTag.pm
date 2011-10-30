@@ -20,18 +20,27 @@ sub new {
 }
 
 sub _self {
-    UNIVERSAL::isa($_[0], __PACKAGE__) ? $_[0] : __PACKAGE__->new($_[0]);
+    UNIVERSAL::isa($_[0], __PACKAGE__) ? shift : __PACKAGE__->new(shift);
 }
 
-sub get(\$$;%) {
-    my ($tag, %opts) = @_[1..$#_];
+sub get(\$;@) {
     my $self = &_self;
+    my $wantarray = wantarray;
 
-    my $startregexp = "<\Q$tag\E";
+    my $tag;
+    if (@_ % 2) {
+        $tag = quotemeta(shift);
+    } else {
+        $tag = '[_:A-Za-z][-._:A-Za-z0-9]*';
+    }
+    my %opts = @_;
+
+    my $startregexp = "<$tag";
     my $key;
     if (exists $opts{id}) {
         $key = 'id';
-    } elsif (%opts) {
+    }
+    elsif (%opts) {
         $key = (keys %opts)[0];
     }
 
@@ -39,7 +48,8 @@ sub get(\$$;%) {
         $startregexp .= "\\s+[^>]*?\Q${key}\E=([\"'])";
         if (UNIVERSAL::isa($opts{$key}, 'Regexp')) {
             $startregexp .= $opts{$key};
-        } else {
+        }
+        else {
             $startregexp .= quotemeta $opts{$key};
         }
         $startregexp .= "\\1";
@@ -56,7 +66,7 @@ sub get(\$$;%) {
         # Empty tag like <div />
         if ($$selfclose) {
             my $child = $self->child($startpos, $endpos - $startpos);
-            return wantarray ? ($child, $startpos, $endpos) : $child;
+            return $wantarray ? ($child, $startpos, $endpos) : $child;
         }
 
         my $level = 1;
@@ -73,8 +83,10 @@ sub get(\$$;%) {
             }
         }
 
-        return wantarray ? ($child, $startpos, $endpos) : $child;
+        return $wantarray ? ($child, $startpos, $endpos) : $child;
     }
+
+    # Not found
     undef;
 }
 
