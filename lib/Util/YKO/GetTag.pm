@@ -7,6 +7,7 @@ use overload '""' => sub { ${$_[0]} }, fallback => 1;
 use Scalar::Util 'readonly';
 
 our $VERSION = 0.03;
+our $TAGNAME_PATTERN = '[_:A-Za-z][-._:A-Za-z0-9]*';
 
 sub new {
     my $class = ref $_[0] ? ref $_[0] : $_[0];
@@ -25,17 +26,19 @@ sub _self {
 
 sub get(\$;@) {
     my $self = &_self;
+
     my $wantarray = wantarray;
 
     my $tag;
     if (@_ % 2) {
         $tag = quotemeta(shift);
     } else {
-        $tag = '[_:A-Za-z][-._:A-Za-z0-9]*';
+        # Match-any-tag-name regex
+        $tag = $TAGNAME_PATTERN;
     }
     my %opts = @_;
 
-    my $startregexp = "<$tag";
+    my $startregexp = "<($tag)";
     my $key;
     if (exists $opts{id}) {
         $key = 'id';
@@ -52,7 +55,7 @@ sub get(\$;@) {
         else {
             $startregexp .= quotemeta $opts{$key};
         }
-        $startregexp .= "\\1";
+        $startregexp .= "\\2";
         delete $opts{$key};
     }
     $startregexp .= '(?:\s+.*?|\s*?)(/?)>';
@@ -61,16 +64,19 @@ sub get(\$;@) {
 
         my $startpos = $-[0];
         my $endpos   = $+[0];
-        my $selfclose = $key ? \$2 : \$1;
+
+        my $selfclose = $key ? \$3 : \$2;
+        my $current_tag = $1;
 
         # Empty tag like <div />
         if ($$selfclose) {
+        # Empty tag like <div />
             my $child = $self->child($startpos, $endpos - $startpos);
             return $wantarray ? ($child, $startpos, $endpos) : $child;
         }
 
         my $level = 1;
-        while ($level && ($$self =~ m#<(/?)\Q$tag\E.*?>#gsc)) {
+        while ($level && ($$self =~ m#<(/?)\Q$current_tag\E.*?>#gsc)) {
             $endpos = $+[0];
             $1 ? $level-- : $level++;
         }
@@ -95,11 +101,13 @@ sub child {
 }
 
 sub inner(\$$;%) {
+    my $tag = @_ % 2 ? $TAGNAME_PATTERN : quotemeta($_[1]);
     my @result = &get;
+
     return unless $result[0];
 
-    $result[0] =~ s#^<\Q$_[1]\E(?:\s+[^>]*?)?>##s;
-    $result[0] =~ s#</\Q$_[1]\E\s*>##s;
+    $result[0] =~ s#^<$tag(?:\s+[^>]*?)?>##si;
+    $result[0] =~ s#</$tag\s*>$##si;
 
     return wantarray ? @result : $result[0];
 }
@@ -131,8 +139,9 @@ Util::YKO::GetTag - get single tag content from HTML string
     use Util::YKO::GetTag;
 
     my $tag1 = get_tag $string, $tagname, %options;
-    my $tag2 = get_tag $string, div, id    => 'foo';
-    my $tag3 = get_tag $string, div, class => 'bar';
+    my $tag2 = get_tag $string, 'div', id    => 'foo';
+    my $tag3 = get_tag $string, 'div', class => 'bar';
+    my $tag4 = get_tag $string, id => 'foo';
 
 
 =head1 DESCRIPTION
@@ -148,6 +157,7 @@ L<Util::YKO::GetTag> exports following functions:
 
     my $tag = get_tag $html, $tag, %options;
     my $tag = get_tag $html, $tag, id => 'foo', class => 'bar';
+    my $tag = get_tag $html, id => 'foo', class => 'bar';
 
     my ($tag, $start, $end) = get_tag $html, $tag, %options;
 
@@ -156,7 +166,10 @@ In scalar context returns tag content wrapped in Util::YKO::GetTag object.
 In list context returns tag content,
 start pos and end pos in original html string
 
-As options accepts list of tag attributes
+If no tag name provided, returns first tag that matches attributes set.
+As options accepts list of tag attributes.
+
+If no tag name and options provided, returns first tag.
 
 =head2 get_tag_inner
 

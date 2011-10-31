@@ -1,7 +1,8 @@
 Revision history for util-yko
 
-0.03   Thu Aug 25 17:22:34 2011
+0.03   Mon Oct 31 10:45:11 2011
        GetTag supports OO
+       GetTag can search by attibutes only if no tagname provided
 
 0.02   Wed Aug 17 15:41:55 2011
        Add module starter plugin for configurable ignores
