@@ -1,5 +1,8 @@
 Revision history for util-yko
 
+0.04   Mon Oct 31 12:14:24 2011
+       GetTag can find tag attributes
+
 0.03   Mon Oct 31 10:45:11 2011
        GetTag supports OO
        GetTag can search by attibutes only if no tagname provided

@@ -5,8 +5,9 @@ use strict;
 require Carp;
 use overload '""' => sub { ${$_[0]} }, fallback => 1;
 use Scalar::Util 'readonly';
+use HTML::Entities;
 
-our $VERSION = 0.03;
+our $VERSION = 0.04;
 our $TAGNAME_PATTERN = '[_:A-Za-z][-._:A-Za-z0-9]*';
 
 sub new {
@@ -96,8 +97,51 @@ sub get(\$;@) {
     undef;
 }
 
+sub attr(\$$) {
+    my $self = &_self;
+    my ($attrname) = @_;
+
+    my $pos = pos($$self);
+    pos($$self) = 0;
+    my $match = $$self
+      =~ /^\s*<${TAGNAME_PATTERN}(?:\s+|\s+[^>]*?\s+)\Q$attrname\E([=\s>])/sig;
+
+    my $matchpos = pos($$self);
+
+    unless ($match) {
+        pos($$self) = $pos;
+        return;
+    }
+
+    my $retval = '';
+
+    if ($1 ne '=') {
+
+        # Empty attr
+        return $retval;
+    }
+
+    my $quotechar = substr $$self, $matchpos, 1;
+
+    if ($quotechar =~ /^['"]$/) {
+        ($retval) =
+          $$self =~ /\G${quotechar}([^${quotechar}>]*)(?:$quotechar|>)/;
+
+        # FIXME: What if not matched?!
+    }
+    else {
+
+        # Unquoted attr
+        ($retval) = $$self =~ /\G([^\s>]+)/;
+        $retval //= '';
+    }
+    pos($$self) = $pos;
+
+    decode_entities $retval;
+}
+
 sub child {
-    ref($_[0])->new( substr ${$_[0]}, $_[1], $_[2] );
+   ref($_[0])->new( substr ${$_[0]}, $_[1], $_[2] );
 }
 
 sub inner(\$$;%) {
