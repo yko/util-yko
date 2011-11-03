@@ -26,7 +26,7 @@ sub _self {
     UNIVERSAL::isa($_[0], __PACKAGE__) ? shift : __PACKAGE__->new(shift);
 }
 
-sub get(\$;@) {
+sub get($;@) {
     my $self = &_self;
 
     my $wantarray = wantarray;
@@ -190,7 +190,7 @@ sub _get_css {
         pos($$self) = $pos;
     }
 
-    return $wantarray ? @found : undef;
+    return $wantarray ? @found : shift @found;
 }
 
 sub _get_css_by_obj {
