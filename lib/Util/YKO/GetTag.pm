@@ -190,7 +190,7 @@ sub _get_css {
         pos($$self) = $pos;
     }
 
-    return $wantarray ? @found : shift @found;
+    return $wantarray ? @found : map { $_->[0] } @found;
 }
 
 sub _get_css_by_obj {
