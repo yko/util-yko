@@ -29,4 +29,5 @@ pos($html) = 0;
 is get_tag($html, 'fake, p#test .baz') => "<p class='baz'> baz </p>";
 
 $html = "<p class='123 baz 456 bar 789'> inner </p>";
-is get_tag($html, 'p.baz.bar') => "<p class='123 baz 456 bar 789'> inner </p>";
+is get_tag($html, 'p.baz.bar') =>
+  "<p class='123 baz 456 bar 789'> inner </p>";

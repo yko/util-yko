@@ -8,7 +8,7 @@ use Scalar::Util 'readonly';
 use HTML::Entities;
 use CSS::Selector::Parser v0.003;
 
-our $VERSION = 0.04;
+our $VERSION         = 0.04;
 our $TAGNAME_PATTERN = '[_:A-Za-z][-_:A-Za-z0-9]*';
 
 sub new {
@@ -40,7 +40,9 @@ sub get(\$;@) {
               : scalar($self->_get_css($tag));
         }
         $tag = quotemeta($tag);
-    } else {
+    }
+    else {
+
         # Match-any-tag-name regex
         $tag = $TAGNAME_PATTERN;
     }
@@ -73,12 +75,13 @@ sub get(\$;@) {
         my $startpos = $-[0];
         my $endpos   = $+[0];
 
-        my $selfclose = $+{selfclose};
+        my $selfclose   = $+{selfclose};
         my $current_tag = $+{tagname};
 
         # Empty tag like <div />
         if ($selfclose) {
-        # Empty tag like <div />
+
+            # Empty tag like <div />
             my $child = $self->child($startpos, $endpos - $startpos);
             return $wantarray ? ($child, $startpos, $endpos) : $child;
         }
@@ -92,7 +95,9 @@ sub get(\$;@) {
         my $child = $self->child($startpos, $endpos - $startpos);
         foreach my $o (keys %opts) {
             my $re =
-              UNIVERSAL::isa($opts{$key}, 'Regexp') ? $opts{$o} : quotemeta $opts{$o};
+              UNIVERSAL::isa($opts{$key}, 'Regexp')
+              ? $opts{$o}
+              : quotemeta $opts{$o};
 
             if ($$child !~ /<\Q$current_tag\E[^>]+\Q$o\E=(["'])$re\1/) {
                 pos($$child) = $startpos;
@@ -151,7 +156,7 @@ sub attr(\$$) {
 }
 
 sub child {
-   ref($_[0])->new( substr ${$_[0]}, $_[1], $_[2] );
+    ref($_[0])->new(substr ${$_[0]}, $_[1], $_[2]);
 }
 
 sub inner(\$$;%) {
@@ -167,7 +172,7 @@ sub inner(\$$;%) {
 }
 
 sub _get_css {
-    my $self = shift;
+    my $self      = shift;
     my @selectors = CSS::Selector::Parser::parse_selector($_[0]);
     my $wantarray = wantarray;
 
@@ -193,7 +198,7 @@ sub _get_css_by_obj {
 
     my $tag = $self;
 
-    TAG: while ($tag && @$obj) {
+  TAG: while ($tag && @$obj) {
         my $cobj = shift @$obj;
         my @args;
 
@@ -205,7 +210,8 @@ sub _get_css_by_obj {
         if (exists $cobj->{class}) {
             @classes = grep $_, split /\./, $cobj->{class};
             my $first = shift @classes;
-            push @args, class => qr/(?:.*?\s+)?\Q$first\E(?:\s+.*?)?/ if $first;
+            push @args, class => qr/(?:.*?\s+)?\Q$first\E(?:\s+.*?)?/
+              if $first;
         }
 
         $tag = $tag->get(@args);
@@ -225,7 +231,7 @@ sub _get_css_by_obj {
 sub import {
     my $caller = caller;
     no strict 'refs';
-    *{"${caller}::get_tag"} = \&get;
+    *{"${caller}::get_tag"}       = \&get;
     *{"${caller}::get_tag_inner"} = \&inner;
 }
 
