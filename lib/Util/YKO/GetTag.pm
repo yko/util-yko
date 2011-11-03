@@ -305,6 +305,19 @@ As options accepts list of tag attributes
 
 L<Util::YKO::GetTag> objects have following methods:
 
+=head2 new
+
+Create new GetTag instance. Accepts html string as a single parameter.
+
+    my $tag = Util::YKO::GetTag->new("<div />");
+
+=head2 child
+
+Creates new GetTag instance from current.
+Accepts two parameters: start pos and end pos.
+
+    my $child = $tag->child(0, 100);
+
 =head2 get
 
 See get_tag function
@@ -320,6 +333,12 @@ See get_tag_inner function
 =head2 reset
 
 Search from beginning. The same as pos($string) = 0
+
+=head2 attr
+
+Get tag attribute
+
+    my $class = $tag->attr('class')
 
 =head1 LICENCE AND COPYRIGHT
 
