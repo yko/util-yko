@@ -3,15 +3,20 @@ use strict;
 use warnings;
 
 BEGIN {
-    use Test::More tests => 8;
+    use Test::More tests => 9;
     use_ok 'Util::YKO::GetTag';
 }
 
-my $html = "<p class='test'> bar </p> baz";
+my $html = "<p class='test'> bar </p> foo <p class='test'> baz </p>";
 my $tag = get_tag $html, 'p.test';
 
 isa_ok $tag => 'Util::YKO::GetTag';
 is $tag => "<p class='test'> bar </p>", "css by class";
+
+pos($html) = 0;
+my @tags = get_tag $html, 'p.test';
+
+is_deeply \@tags, ["<p class='test'> bar </p>", "<p class='test'> baz </p>"];
 
 $html = "<p class='test test2'> bar </p> baz";
 $tag = get_tag $html, 'p.test.test2';
