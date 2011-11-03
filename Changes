@@ -1,5 +1,9 @@
 Revision history for util-yko
 
+0.05   Thu Nov 03 12:46:19 2011
+       Introduced basic CSS selectors in GetTag
+       Require perl 5.10
+
 0.04   Mon Oct 31 12:14:24 2011
        GetTag can find tag attributes
 

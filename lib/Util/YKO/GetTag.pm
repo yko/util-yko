@@ -6,9 +6,10 @@ require Carp;
 use overload '""' => sub { ${$_[0]} }, fallback => 1;
 use Scalar::Util 'readonly';
 use HTML::Entities;
+use CSS::Selector::Parser v0.003;
 
 our $VERSION = 0.04;
-our $TAGNAME_PATTERN = '[_:A-Za-z][-._:A-Za-z0-9]*';
+our $TAGNAME_PATTERN = '[_:A-Za-z][-_:A-Za-z0-9]*';
 
 sub new {
     my $class = ref $_[0] ? ref $_[0] : $_[0];
@@ -32,14 +33,20 @@ sub get(\$;@) {
 
     my $tag;
     if (@_ % 2) {
-        $tag = quotemeta(shift);
+        $tag = shift;
+        if ($tag !~ /^$TAGNAME_PATTERN$/) {
+            return $wantarray
+              ? ($self->_get_css($tag))
+              : scalar($self->_get_css($tag));
+        }
+        $tag = quotemeta($tag);
     } else {
         # Match-any-tag-name regex
         $tag = $TAGNAME_PATTERN;
     }
     my %opts = @_;
 
-    my $startregexp = "<($tag)";
+    my $startregexp = "<(?<tagname>$tag)";
     my $key;
     if (exists $opts{id}) {
         $key = 'id';
@@ -49,28 +56,28 @@ sub get(\$;@) {
     }
 
     if ($key) {
-        $startregexp .= "\\s+[^>]*?\Q${key}\E=([\"'])";
+        $startregexp .= "\\s+[^>]*?\Q${key}\E=(?<quotechar>[\"'])";
         if (UNIVERSAL::isa($opts{$key}, 'Regexp')) {
             $startregexp .= $opts{$key};
         }
         else {
             $startregexp .= quotemeta $opts{$key};
         }
-        $startregexp .= "\\2";
+        $startregexp .= '\k<quotechar>';
         delete $opts{$key};
     }
-    $startregexp .= '(?:\s+.*?|\s*?)(/?)>';
+    $startregexp .= '(?:\s+.*?|\s*?)(?<selfclose>/?)>';
 
   OPTS: while ($$self =~ /$startregexp/gsc) {
 
         my $startpos = $-[0];
         my $endpos   = $+[0];
 
-        my $selfclose = $key ? \$3 : \$2;
-        my $current_tag = $1;
+        my $selfclose = $+{selfclose};
+        my $current_tag = $+{tagname};
 
         # Empty tag like <div />
-        if ($$selfclose) {
+        if ($selfclose) {
         # Empty tag like <div />
             my $child = $self->child($startpos, $endpos - $startpos);
             return $wantarray ? ($child, $startpos, $endpos) : $child;
@@ -84,7 +91,10 @@ sub get(\$;@) {
 
         my $child = $self->child($startpos, $endpos - $startpos);
         foreach my $o (keys %opts) {
-            if ($$child !~ /<$tag[^>]+\Q$o\E=(["'])\Q$opts{$o}\E\1/) {
+            my $re =
+              UNIVERSAL::isa($opts{$key}, 'Regexp') ? $opts{$o} : quotemeta $opts{$o};
+
+            if ($$child !~ /<\Q$current_tag\E[^>]+\Q$o\E=(["'])$re\1/) {
                 pos($$child) = $startpos;
                 redo OPTS;
             }
@@ -154,6 +164,62 @@ sub inner(\$$;%) {
     $result[0] =~ s#</$tag\s*>$##si;
 
     return wantarray ? @result : $result[0];
+}
+
+sub _get_css {
+    my $self = shift;
+    my @selectors = CSS::Selector::Parser::parse_selector($_[0]);
+    my $wantarray = wantarray;
+
+    my @found;
+
+    my $pos = pos($$self);
+
+    foreach my $selector (@selectors) {
+        my $obj = $self->_get_css_by_obj($selector);
+        next unless defined $obj;
+
+        return $obj if !$wantarray && defined $obj;
+
+        push @found, [$obj, pos($$self)] if $obj;
+        pos($$self) = $pos;
+    }
+
+    return $wantarray ? @found : undef;
+}
+
+sub _get_css_by_obj {
+    my ($self, $obj) = @_;
+
+    my $tag = $self;
+
+    TAG: while ($tag && @$obj) {
+        my $cobj = shift @$obj;
+        my @args;
+
+        push @args, $cobj->{element} if exists $cobj->{element};
+
+        push @args, id => $cobj->{id} if exists $cobj->{id};
+
+        my @classes;
+        if (exists $cobj->{class}) {
+            @classes = grep $_, split /\./, $cobj->{class};
+            my $first = shift @classes;
+            push @args, class => qr/(?:.*?\s+)?\Q$first\E(?:\s+.*?)?/ if $first;
+        }
+
+        $tag = $tag->get(@args);
+
+        if ($tag && @classes) {
+            my $tagclass = $tag->attr('class');
+            foreach (@classes) {
+                next TAG
+                  if $tagclass !~ /(?:.*?\s+)?\Q$_\E(?:.*?\s+)?/;
+            }
+        }
+    }
+
+    $tag;
 }
 
 sub import {
