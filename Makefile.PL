@@ -9,6 +9,7 @@ perl_version '5.010';
 build_requires 'Test::More';
 requires 'Carp';
 requires 'Scalar::Util';
+requires 'CSS::Selector::Parser' => 0.003;
 
 auto_install;
 
